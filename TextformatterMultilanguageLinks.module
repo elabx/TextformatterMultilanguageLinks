@@ -1,0 +1,56 @@
+<?php
+/**
+ * Textformatter for outputting page's URL corresponding to the user's language.
+ * by Eduardo San Miguel
+ *
+ * ProcessWire 2.x
+ * Copyright (C) 2011 by Ryan Cramer
+ * Licensed under GNU/GPL v2, see LICENSE.TXT
+ *
+ * http://www.processwire.com
+ * http://www.ryancramer.com
+ *
+ */
+class TextformatterLanguageLinks extends Textformatter implements Module
+{
+    
+    public static function getModuleInfo()
+    {
+        return array(
+            'title' => "Multilanguage links",
+            'version' => "100",
+            'summary' => "Textformatter for outputting page's URL corresponding to the user's language.",
+            'author' => "Eduardo San Miguel",
+            'requires' => array(
+                "PHP>=5.4.0",
+                "ProcessWire>=2.5.28"
+            ),
+            'icon' => 'languages'
+        );
+    }
+    
+    public function format(&$str) 
+    {
+        $dom = new DOMDocument();
+        $dom->loadHTML($str);
+
+        $tags = $dom->getElementsByTagName('a');
+        foreach ($tags as $tag) {
+            $path = wire("sanitizer")->path($tag->getAttribute("href"));
+            if($path){
+                $page = wire('pages')->get($path);
+            } else{
+                continue;
+            }
+            
+            if($page->id){
+                $langPageUrl = $page->localUrl(wire("user")->language);
+            }
+            //If empty?
+            if($langPageUrl){
+                $str = str_replace($tag->getAttribute('href'), $langPageUrl, $str);
+            }
+        }
+    }
+    
+}
